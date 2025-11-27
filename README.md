@@ -1,145 +1,124 @@
-# 🗺️ Desafio WAR Estruturado – Conquista de Territórios
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-Bem-vindo ao **Desafio WAR Estruturado!** Inspirado no famoso jogo de estratégia, este desafio convida você a programar diferentes versões do jogo WAR, evoluindo seus conhecimentos em **C** à medida que avança pelos níveis **Novato**, **Aventureiro** e **Mestre**.
+/*==========================================================
+    STRUCT DE TERRITÓRIOS
+==========================================================*/
+typedef struct {
+    char nome[30];
+    int tropas;
+} Territorio;
 
-A empresa **MateCheck** contratou você para criar uma versão estruturada do WAR. Cada nível propõe novas funcionalidades, conceitos e desafios de programação. **Você escolhe por onde começar!**
+/*==========================================================
+    FUNÇÃO: SIMULA UM ATAQUE ENTRE TERRITÓRIOS
+==========================================================*/
+void atacar(Territorio *atacante, Territorio *defensor) {
+    if (atacante->tropas < 2) {
+        printf("\n[ERRO] %s não tem tropas suficientes para atacar!\n", atacante->nome);
+        return;
+    }
 
----
+    printf("\n>>> %s está atacando %s...\n", atacante->nome, defensor->nome);
 
-## 🧩 Nível Novato: Cadastro Inicial dos Territórios
+    int dadoAtk = rand() % 6 + 1;
+    int dadoDef = rand() % 6 + 1;
 
-### 🎯 Objetivo
+    printf("Dado do Atacante (%s): %d\n", atacante->nome, dadoAtk);
+    printf("Dado do Defensor  (%s): %d\n", defensor->nome, dadoDef);
 
-- Criar uma `struct` chamada `Territorio`.
-- Usar um **vetor estático de 5 elementos** para armazenar os territórios.
-- Cadastrar os dados de cada território: **Nome**, **Cor do Exército**, e **Número de Tropas**.
-- Exibir o estado atual do mapa.
+    if (dadoAtk > dadoDef) {
+        defensor->tropas--;
+        printf("\nResultado: %s venceu o duelo!\n", atacante->nome);
 
-### ⚙️ Funcionalidades
+        if (defensor->tropas <= 0) {
+            printf(" %s conquistou o território %s!\n",
+                   atacante->nome, defensor->nome);
 
-- Leitura de dados pelo terminal (`fgets` e `scanf`)
-- Impressão organizada dos dados de todos os territórios
+            defensor->tropas = 1;        // território conquistado recebe 1 tropa
+            atacante->tropas--;          // atacante envia 1 tropa para ocupar
+        }
 
-### 💡 Conceitos abordados
+    } else if (dadoDef > dadoAtk) {
+        atacante->tropas--;
+        printf("\nResultado: %s defendeu com sucesso!\n", defensor->nome);
 
-- `struct`
-- Vetor estático
-- Entrada/saída com `scanf`, `fgets`, e `printf`
+    } else {
+        printf("\nEmpate! Nada acontece.\n");
+    }
+}
 
-### 📥 Entrada
+/*==========================================================
+    FUNÇÃO PRINCIPAL
+==========================================================*/
+int main() {
+    srand(time(NULL));
 
-O usuário digita o nome do território, a cor do exército dominante e o número de tropas para **cada um dos 5 territórios**.
+    int qtd;
+    printf("Quantos territórios deseja criar? (1 a 5): ");
+    scanf("%d", &qtd);
 
-### 📤 Saída
+    if (qtd < 1 || qtd > 5) {
+        printf("Quantidade inválida!\n");
+        return 0;
+    }
 
+    /*======================================================
+        ALOCAÇÃO DINÂMICA COM CALLOC
+    ======================================================*/
+    Territorio *mapa = calloc(qtd, sizeof(Territorio));
 
+    printf("\n=== CADASTRO DOS TERRITÓRIOS ===\n");
 
-## 🧗‍♂️ Nível Aventureiro: Batalhas Estratégicas
+    for (int i = 0; i < qtd; i++) {
+        printf("\nNome do território %d: ", i + 1);
+        scanf("%s", mapa[i].nome);
 
-### 🎯 Objetivo
+        printf("Tropas iniciais em %s: ", mapa[i].nome);
+        scanf("%d", &mapa[i].tropas);
+    }
 
-- Substituir o vetor estático por **alocação dinâmica com `calloc`**
-- Criar uma função para **simular ataques entre dois territórios**
-- Utilizar números aleatórios para representar dados de batalha
+    /*======================================================
+        LOOP INTERATIVO DE ATAQUES
+    ======================================================*/
+    int opcao = 1;
 
-### 🆕 Novidades em relação ao Nível Novato
+    while (opcao != 0) {
+        printf("\n\n=== MAPA ATUAL ===\n");
+        for (int i = 0; i < qtd; i++) {
+            printf("%d - %-10s | Tropas: %d\n", i + 1, mapa[i].nome, mapa[i].tropas);
+        }
 
-- Alocação dinâmica de memória com `calloc`
-- Uso de **ponteiros**
-- Laço interativo para o jogador escolher **territórios para atacar e defender**
-- Simulação de dados de ataque e defesa com `rand()`
+        printf("\nEscolha o território ATACANTE (1-%d) ou 0 para sair: ", qtd);
+        int a;
+        scanf("%d", &a);
 
-### ⚙️ Funcionalidades
+        if (a == 0)
+            break;
 
-- Cadastro dos territórios (como no Nível Novato)
-- Fase de ataque com:
-  - Escolha de atacante e defensor
-  - Dados de ataque/defesa
-  - Lógica:
-    - Se atacante vence → defensor perde 1 tropa
-    - Se defensor perde todas → território é conquistado
-    - Empates favorecem o atacante
+        printf("Escolha o território DEFENSOR (1-%d): ", qtd);
+        int d;
+        scanf("%d", &d);
 
-### 💡 Conceitos abordados
+        if (a < 1 || a > qtd || d < 1 || d > qtd) {
+            printf("\n[ERRO] Entrada inválida!\n");
+            continue;
+        }
 
-- Ponteiros
-- `calloc` / `free`
-- Aleatoriedade com `rand()` / `srand()`
-- Funções para modularização
+        if (a == d) {
+            printf("\n[ERRO] Um território não pode atacar ele mesmo!\n");
+            continue;
+        }
 
-### 📥 Entrada
+        atacar(&mapa[a - 1], &mapa[d - 1]);
+    }
 
-- Território **atacante** (1 a 5)
-- Território **defensor** (1 a 5)
+    /*======================================================
+        LIBERAÇÃO DE MEMÓRIA
+    ======================================================*/
+    free(mapa);
 
-### 📤 Saída
-
-Exibição do resultado da batalha, dados sorteados e mudanças no mapa.
-
-
-
-## 🧠 Nível Mestre: Missões e Modularização Total
-
-### 🎯 Objetivo
-
-- Dividir o código em funções bem definidas
-- Implementar um **sistema de missões**
-- Verificar cumprimento da missão
-- Aplicar **boas práticas** (uso de `const`, modularização, etc.)
-
-### 🆕 Diferenças em relação ao Nível Aventureiro
-
-- Modularização total em funções
-- Missões aleatórias atribuídas:
-  1. Destruir o exército **Verde**
-  2. Conquistar **3 territórios**
-- Menu interativo com opções
-
-### ⚙️ Funcionalidades
-
-- Inicialização automática dos territórios
-- Menu principal com 3 opções:
-  1. Atacar
-  2. Verificar Missão
-  3. Sair
-- Verificação de vitória da missão
-
-### 💡 Conceitos abordados
-
-- Modularização
-- `const` correctness
-- Estruturação em múltiplas funções
-- Passagem por referência
-
-### 📥 Entrada
-
-- Ações do jogador via menu:
-  - `1` - Atacar
-  - `2` - Verificar Missão
-  - `0` - Sair
-- Escolha de territórios para ataque
-
-### 📤 Saída
-
-- Mapa atualizado
-- Resultados das batalhas
-- Verificação da missão
-- Mensagem de vitória
-
-
-
-## 🏁 Conclusão
-
-Com este **Desafio WAR Estruturado**, você praticará fundamentos essenciais da linguagem **C** de forma **divertida e progressiva**.
-
-Cada nível foca em um conjunto de habilidades:
-
-- 🟢 **Novato**: `struct`, vetor, entrada/saída
-- 🔵 **Aventureiro**: ponteiros, memória dinâmica, lógica de jogo
-- 🟣 **Mestre**: modularização, design limpo, sistema de missões
-
-
-
-🚀 **Boa sorte! Avance nos níveis e torne-se um mestre da programação estratégica!**
-
-> Equipe de Ensino – MateCheck
+    printf("\n=== FIM DO PROGRAMA ===\n");
+    return 0;
+}
